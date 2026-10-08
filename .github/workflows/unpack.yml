@@ -1,0 +1,38 @@
+name: Unpack site upload
+
+on:
+  push:
+    paths:
+      - 'site.zip'
+  workflow_dispatch:
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Unpack site.zip to repo root
+        run: |
+          set -e
+          if [ ! -f site.zip ]; then echo "no site.zip, nothing to do"; exit 0; fi
+          rm -rf /tmp/site && mkdir -p /tmp/site
+          unzip -o -q site.zip -d /tmp/site
+          rm site.zip
+          cp -a /tmp/site/. .
+          rm -rf /tmp/site
+
+      - name: Commit unpacked files
+        run: |
+          git config user.name "hussain301"
+          git config user.email "hussain301@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "Add Nariwal API storefront (Next.js)"
+            git push
+          fi
